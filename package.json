@@ -1,0 +1,14 @@
+{
+  "name": "blockchain-student-record-system",
+  "version": "1.0.0",
+  "description": "Blockchain-Based Student Record & Attendance Management System",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:blockchain": "cd blockchain && npx hardhat node",
+    "deploy:contracts": "cd blockchain && npx hardhat run scripts/deploy.js --network localhost",
+    "start:backend": "cd backend && node server.js",
+    "start:frontend": "cd frontend && npm run start",
+    "start": "powershell -ExecutionPolicy Bypass -File .\\start-local.ps1"
+  }
+}
