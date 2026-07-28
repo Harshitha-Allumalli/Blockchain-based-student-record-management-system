@@ -16,11 +16,18 @@ const sendEmail = async (options) => {
     } else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
         // Simple Gmail fallback
         transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: "smtp.gmail.com",
+            port: 587,
+            secure: false,
+            requireTLS: true,
             auth: {
                 user: process.env.EMAIL_USER.trim(),
-                pass: (process.env.EMAIL_PASS || '').replace(/\s+/g, ''),
+                pass: (process.env.EMAIL_PASS || "").replace(/\s+/g, ""),
             },
+            tls: {
+                rejectUnauthorized: false,
+                family: 4
+            }
         });
     } else {
         // Fallback to console log for demo mode
