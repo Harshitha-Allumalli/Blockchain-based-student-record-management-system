@@ -7,11 +7,19 @@ const sendEmail = async (options) => {
     if (process.env.SMTP_HOST) {
         transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST,
-            port: process.env.SMTP_PORT,
+            port: Number(process.env.SMTP_PORT),
+            secure: false,
+            requireTLS: true,
             auth: {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS,
             },
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 10000,
+            tls: {
+                rejectUnauthorized: false,
+            }
         });
     } else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
         // Simple Gmail fallback
