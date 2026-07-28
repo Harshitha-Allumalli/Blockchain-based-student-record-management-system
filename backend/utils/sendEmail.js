@@ -1,68 +1,55 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-    // Create a test account if no credentials are provided
-    let transporter;
-    
-    if (process.env.SMTP_HOST) {
-        transporter = nodemailer.createTransport({
+    try {
+        console.log("========== SMTP Configuration ==========");
+        console.log("SMTP_HOST:", process.env.SMTP_HOST);
+        console.log("SMTP_PORT:", process.env.SMTP_PORT);
+        console.log("SMTP_USER:", process.env.SMTP_USER);
+        console.log("========================================");
+
+        const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST,
             port: Number(process.env.SMTP_PORT),
-            secure: false,
+            secure: false, // Use true only with port 465
             requireTLS: true,
+
             auth: {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS,
             },
+
             connectionTimeout: 10000,
             greetingTimeout: 10000,
             socketTimeout: 10000,
+
             tls: {
-                rejectUnauthorized: false,
+                rejectUnauthorized: false
             }
         });
-    } else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-        // Simple Gmail fallback
-        transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: Number(process.env.SMTP_PORT),
-            secure: false,
-            requireTLS: true,
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
-            },
-            tls: {
-                rejectUnauthorized: false,
-            },
-            family: 4
-        });
-    } else {
-        // Fallback to console log for demo mode
-        transporter = {
-            sendMail: async (mailOptions) => {
-                console.log('\n====================================================');
-                console.log('✉️  DEMO EMAIL SENT (No SMTP Configured in .env)');
-                console.log('To:      ', mailOptions.to);
-                console.log('Subject: ', mailOptions.subject);
-                console.log('----------------------------------------------------');
-                console.log(mailOptions.text);
-                console.log('====================================================\n');
-            }
+
+        // Verify SMTP connection
+        await transporter.verify();
+        console.log("✅ SMTP connection verified successfully.");
+
+        const mailOptions = {
+            from: `"BlockEdu" <${process.env.SMTP_USER}>`,
+            to: options.email,
+            subject: options.subject,
+            text: options.message,
         };
-    }
 
-    const mailOptions = {
-        from: `BlockEdu <${process.env.EMAIL_USER || 'noreply@blockedu.com'}>`,
-        to: options.email,
-        subject: options.subject,
-        text: options.message,
-    };
+        const info = await transporter.sendMail(mailOptions);
 
-    try {
-        await transporter.sendMail(mailOptions);
+        console.log("✅ Email sent successfully.");
+        console.log("Message ID:", info.messageId);
+
+        return info;
+
     } catch (err) {
-        console.error('📧 Email Error:', err.message);
+        console.error("❌ Email Error:");
+        console.error(err);
+
         throw err;
     }
 };
