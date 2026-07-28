@@ -1,55 +1,39 @@
-const nodemailer = require('nodemailer');
+const axios = require("axios");
 
 const sendEmail = async (options) => {
     try {
-        console.log("========== SMTP Configuration ==========");
-        console.log("SMTP_HOST:", process.env.SMTP_HOST);
-        console.log("SMTP_PORT:", process.env.SMTP_PORT);
-        console.log("SMTP_USER:", process.env.SMTP_USER);
-        console.log("========================================");
-
-        const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: Number(process.env.SMTP_PORT),
-            secure: false, // Use true only with port 465
-            requireTLS: true,
-
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
+        const response = await axios.post(
+            "https://api.brevo.com/v3/smtp/email",
+            {
+                sender: {
+                    name: "BlockEdu",
+                    email: "harshithaallumalli004@gmail.com" // Must be a verified sender in Brevo
+                },
+                to: [
+                    {
+                        email: options.email
+                    }
+                ],
+                subject: options.subject,
+                textContent: options.message
             },
-
-            connectionTimeout: 10000,
-            greetingTimeout: 10000,
-            socketTimeout: 10000,
-
-            tls: {
-                rejectUnauthorized: false
+            {
+                headers: {
+                    "api-key": process.env.BREVO_API_KEY,
+                    "Content-Type": "application/json"
+                }
             }
-        });
+        );
 
-        // Verify SMTP connection
-        await transporter.verify();
-        console.log("✅ SMTP connection verified successfully.");
-
-        const mailOptions = {
-            from: '"BlockEdu" <harshithaallumalli004@gmail.com>',
-            to: options.email,
-            subject: options.subject,
-            text: options.message,
-        };
-
-        const info = await transporter.sendMail(mailOptions);
-
-        console.log("✅ Email sent successfully.");
-        console.log("Message ID:", info.messageId);
-
-        return info;
-
+        console.log("✅ Email sent successfully");
+        console.log(response.data);
     } catch (err) {
-        console.error("❌ Email Error:");
-        console.error(err);
-
+        console.error("❌ Brevo API Error:");
+        if (err.response) {
+            console.error(err.response.data);
+        } else {
+            console.error(err.message);
+        }
         throw err;
     }
 };
