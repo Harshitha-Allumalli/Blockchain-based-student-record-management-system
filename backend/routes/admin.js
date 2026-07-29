@@ -1,44 +1,61 @@
 const express = require('express');
-const router  = express.Router();
+const router = express.Router();
+
 const { protect, requireRole } = require('../middleware/auth');
-const { db, usersDb, logsDb } = require('../db/sqlite');
+const { usersDb, logsDb } = require('../db/supabase');
+const supabase = require('../config/supabase');
 
-// ─── Helper: promisified db.all / db.run ────────────────────────────────────
-const dbAll = (sql, params = []) =>
-    new Promise((res, rej) => db.all(sql, params, (err, rows) => err ? rej(err) : res(rows || [])));
-
-const dbRun = (sql, params = []) =>
-    new Promise((res, rej) => db.run(sql, params, function(err) { err ? rej(err) : res(this); }));
-
-const dbGet = (sql, params = []) =>
-    new Promise((res, rej) => db.get(sql, params, (err, row) => err ? rej(err) : res(row)));
-
-// ─── GET /api/admin/faculty ──────────────────────────────────────────────────
+// ─── GET /api/admin/faculty ──────────────────────────────────────────────
 router.get('/faculty', protect, requireRole('admin'), async (req, res) => {
     try {
-        const rows = await dbAll(
-            `SELECT id, name, email, role, createdAt FROM users WHERE role = 'faculty' ORDER BY createdAt DESC`
-        );
-        res.json({ success: true, count: rows.length, faculty: rows });
+
+        const { data, error } = await supabase
+            .from('users')
+            .select('id,name,email,role,createdAt')
+            .eq('role', 'faculty')
+            .order('createdAt', { ascending: false });
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            count: data.length,
+            faculty: data
+        });
+
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-// ─── POST /api/admin/faculty ─────────────────────────────────────────────────
+
+// ─── POST /api/admin/faculty ─────────────────────────────────────────────
 router.post('/faculty', protect, requireRole('admin'), async (req, res) => {
+
     try {
-        const { name, email, password, phone, department, designation } = req.body;
+
+        const {
+            name,
+            email,
+            password,
+            department,
+            designation
+        } = req.body;
 
         if (!name || !email || !password) {
-            return res.status(400).json({ error: 'Name, email and password are required.' });
+            return res.status(400).json({
+                error: 'Name, email and password are required.'
+            });
         }
 
         const cleanEmail = email.toLowerCase().trim();
 
         const existing = await usersDb.findByEmail(cleanEmail);
+
         if (existing) {
-            return res.status(400).json({ error: 'A user with this email already exists.' });
+            return res.status(400).json({
+                error: 'A user with this email already exists.'
+            });
         }
 
         await usersDb.create({
@@ -46,7 +63,7 @@ router.post('/faculty', protect, requireRole('admin'), async (req, res) => {
             email: cleanEmail,
             password,
             role: 'faculty',
-            isVerified: 1
+            isVerified: true
         });
 
         await logsDb.add({
@@ -60,25 +77,51 @@ router.post('/faculty', protect, requireRole('admin'), async (req, res) => {
         res.status(201).json({
             success: true,
             message: `Faculty member "${name}" added successfully.`,
-            faculty: { name, email: cleanEmail, role: 'faculty' }
+            faculty: {
+                name,
+                email: cleanEmail,
+                role: 'faculty'
+            }
         });
+
     } catch (err) {
-        res.status(500).json({ error: err.message });
+
+        res.status(500).json({
+            error: err.message
+        });
+
     }
+
 });
 
-// ─── DELETE /api/admin/faculty/:id ──────────────────────────────────────────
+
+// ─── DELETE /api/admin/faculty/:id ───────────────────────────────────────
 router.delete('/faculty/:id', protect, requireRole('admin'), async (req, res) => {
+
     try {
+
         const { id } = req.params;
 
-        const user = await dbGet(
-            `SELECT * FROM users WHERE id = ? AND role = 'faculty'`, [id]
-        );
+        const { data: user, error: fetchError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', id)
+            .eq('role', 'faculty')
+            .single();
 
-        if (!user) return res.status(404).json({ error: 'Faculty member not found.' });
+        if (fetchError || !user) {
+            return res.status(404).json({
+                error: 'Faculty member not found.'
+            });
+        }
 
-        await dbRun(`DELETE FROM users WHERE id = ? AND role = 'faculty'`, [id]);
+        const { error } = await supabase
+            .from('users')
+            .delete()
+            .eq('id', id)
+            .eq('role', 'faculty');
+
+        if (error) throw error;
 
         await logsDb.add({
             action: 'faculty_deleted',
@@ -88,10 +131,19 @@ router.delete('/faculty/:id', protect, requireRole('admin'), async (req, res) =>
             severity: 'warning'
         });
 
-        res.json({ success: true, message: `Faculty member "${user.name}" removed successfully.` });
+        res.json({
+            success: true,
+            message: `Faculty member "${user.name}" removed successfully.`
+        });
+
     } catch (err) {
-        res.status(500).json({ error: err.message });
+
+        res.status(500).json({
+            error: err.message
+        });
+
     }
+
 });
 
 module.exports = router;
