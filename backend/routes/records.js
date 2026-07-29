@@ -9,7 +9,6 @@ const { protect, requireRole } = require('../middleware/auth');
 const { recordsDb, logsDb, usersDb } = require('../db/sqlite');
 
 // ─── Multer Setup ────────────────────────────────────────────────────────────
-const multer = require("multer");
 
 // Store files temporarily in memory instead of saving to uploads/
 const storage = multer.memoryStorage();
