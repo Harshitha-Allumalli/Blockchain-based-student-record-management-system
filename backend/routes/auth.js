@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/sendEmail');
-const { usersDb, otpsDb, logsDb } = require('../db/sqlite');
+const { usersDb, otpsDb, logsDb } = require('../db/supabase');
 
 const signToken = (user) =>
     jwt.sign(
