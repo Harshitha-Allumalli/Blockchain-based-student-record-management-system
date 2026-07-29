@@ -77,20 +77,25 @@ router.post('/add', protect, requireRole('admin'), upload.any(), async (req, res
         const titlesList       = parseList(req.body.titles);
         const descriptionsList = parseList(req.body.descriptions);
 
-        const newDocObjs = uploadedFiles.map((f, i) => {
-            const filename = f.filename;
-            const ipfsCid = `QmMockIPFS_${filename}`;
+        const newDocObjs = [];
+
+        for (let i = 0; i < uploadedFiles.length; i++) {
+            const f = uploadedFiles[i];
+
+            const uploaded = await uploadFile(f);
+
             const docLabel = (labelsList && labelsList[i]) || label || f.originalname;
-            return {
+
+            newDocObjs.push({
                 _id: (Date.now() + i).toString(),
-                filename,
-                ipfsCid,
-                title:       (titlesList[i]       || docLabel),
-                description: (descriptionsList[i] || ''),
+                filename: uploaded.filename,
+                ipfsCid: uploaded.publicUrl,
+                title: titlesList[i] || docLabel,
+                description: descriptionsList[i] || "",
                 label: docLabel,
                 uploadedAt: new Date().toISOString()
-            };
-        });
+            });
+        }
 
         const firstIpfsCid = newDocObjs[0]?.ipfsCid || 'QmNoFile';
 
