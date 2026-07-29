@@ -6,7 +6,7 @@ const { usersDb, otpsDb, logsDb } = require('../db/supabase');
 
 const signToken = (user) =>
     jwt.sign(
-        { id: user._id || user.id || Date.now().toString(), email: user.email, role: user.role, studentId: user.studentId || null },
+        { id: user.id, email: user.email, role: user.role, studentId: user.studentId || null },
         process.env.JWT_SECRET || 'blockedu_secret_jwt_key_2026',
         { expiresIn: '7d' }
     );
