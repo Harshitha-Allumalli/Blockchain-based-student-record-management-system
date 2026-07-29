@@ -1,5 +1,4 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -41,38 +40,11 @@ app.get('/api/health', (req, res) => {
         status: 'OK',
         service: 'BlockEdu API',
         timestamp: new Date().toISOString(),
-        db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+        db: "Supabase"
     });
 });
 
-// ─── Default User Seeding Function ───────────────────────────────────────────
-const seedDefaultUsers = async () => {
-    try {
-        const User = require('./models/User');
-        const adminExists = await User.findOne({ email: 'admin@blockedu.com' });
-        if (!adminExists) {
-            await User.create({ name: 'System Admin', email: 'admin@blockedu.com', password: 'admin123', role: 'admin', isVerified: true });
-            console.log('🌱 Seeded default admin user: admin@blockedu.com');
-        }
-        const verifierExists = await User.findOne({ email: 'verifier@blockedu.com' });
-        if (!verifierExists) {
-            await User.create({ name: 'Verifier HR', email: 'verifier@blockedu.com', password: 'verify123', role: 'verifier', isVerified: true });
-            console.log('🌱 Seeded default verifier user: verifier@blockedu.com');
-        }
-        const facultyExists = await User.findOne({ email: 'faculty@blockedu.com' });
-        if (!facultyExists) {
-            await User.create({ name: 'Dr. Alan Turing', email: 'faculty@blockedu.com', password: 'faculty123', role: 'faculty', isVerified: true });
-            console.log('🌱 Seeded default faculty user: faculty@blockedu.com');
-        }
-        const studentExists = await User.findOne({ email: 'student@blockedu.com' });
-        if (!studentExists) {
-            await User.create({ name: 'Alice Smith', email: 'student@blockedu.com', password: 'student123', role: 'student', studentId: 'STU101', isVerified: true });
-            console.log('🌱 Seeded default student user: student@blockedu.com');
-        }
-    } catch (e) {
-        console.error('Seeding error:', e.message);
-    }
-};
+
 
 // ─── 404 Handler ──────────────────────────────────────────────────────────────
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
@@ -92,15 +64,4 @@ app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
 
-// Attempt MongoDB in background (non-blocking) — only used if routes import Mongoose models
-mongoose.set('bufferCommands', false);
-if (process.env.MONGODB_URI) {
-    mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 3000 })
-        .then(async () => {
-            console.log('✅ MongoDB connected');
-            await seedDefaultUsers();
-        })
-        .catch(err => {
-            console.warn('⚠️  MongoDB unavailable, running on SQLite only:', err.message);
-        });
-}
+console.log("✅ Supabase Database Connected");
