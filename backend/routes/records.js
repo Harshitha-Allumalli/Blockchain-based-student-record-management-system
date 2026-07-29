@@ -6,7 +6,7 @@ const { ethers } = require('ethers');
 const multer = require('multer');
 const path = require('path');
 const { protect, requireRole } = require('../middleware/auth');
-const { recordsDb, logsDb, usersDb } = require('../db/sqlite');
+const { recordsDb, logsDb, usersDb } = require('../db/supabase');
 
 // ─── Multer Setup ────────────────────────────────────────────────────────────
 
@@ -183,20 +183,26 @@ router.post('/upload-doc/:studentId', protect, upload.any(), async (req, res) =>
         const titlesList2       = parseList2(req.body.titles);
         const descriptionsList2 = parseList2(req.body.descriptions);
 
-        const newDocObjs = uploadedFiles.map((f, i) => {
-            const filename = f.filename;
-            const ipfsCid = `QmMockIPFS_${filename}`;
+        const newDocObjs = [];
+
+        for (let i = 0; i < uploadedFiles.length; i++) {
+
+            const f = uploadedFiles[i];
+
+            const uploaded = await uploadFile(f);
+
             const docLabel = (labelsList2 && labelsList2[i]) || req.body.label || f.originalname;
-            return {
+
+            newDocObjs.push({
                 _id: (Date.now() + i).toString(),
-                filename,
-                ipfsCid,
-                title:       (titlesList2[i]       || docLabel),
-                description: (descriptionsList2[i] || ''),
+                filename: uploaded.filename,
+                ipfsCid: uploaded.publicUrl,
+                title: titlesList2[i] || docLabel,
+                description: descriptionsList2[i] || "",
                 label: docLabel,
                 uploadedAt: new Date().toISOString()
-            };
-        });
+            });
+        }
 
         let updated = record;
         for (const docObj of newDocObjs) {
