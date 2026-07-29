@@ -8,11 +8,17 @@ const { protect, requireRole } = require('../middleware/auth');
 const { recordsDb, logsDb, usersDb } = require('../db/sqlite');
 
 // ─── Multer Setup ────────────────────────────────────────────────────────────
-const storage = multer.diskStorage({
-    destination: 'uploads/',
-    filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
-});
-const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } }); // 20MB
+const multer = require("multer");
+
+// Store files temporarily in memory instead of saving to uploads/
+const storage = multer.memoryStorage();
+
+const upload = multer({
+    storage,
+    limits: {
+        fileSize: 20 * 1024 * 1024 // 20 MB
+    }
+}); // 20MB
 
 // ─── Smart Contract ABI ──────────────────────────────────────────────────────
 const contractABI = [
