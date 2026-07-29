@@ -3,7 +3,7 @@ const router = express.Router();
 const crypto = require('crypto');
 const { ethers } = require('ethers');
 const { protect, requireRole } = require('../middleware/auth');
-const { attendanceDb, usersDb, logsDb } = require('../db/sqlite');
+const { attendanceDb, usersDb, logsDb } = require('../db/supabase');
 const sendEmail = require('../utils/sendEmail');
 
 // ─── Smart Contract ABI ──────────────────────────────────────────────────────
