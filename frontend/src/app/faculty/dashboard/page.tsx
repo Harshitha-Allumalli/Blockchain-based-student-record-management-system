@@ -229,16 +229,18 @@ export default function FacultyDashboard() {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    courseCategory,
-                    course,
-                    semester: year,
-                    section,
-                    subjectId,
-                    attendanceDate,
-                    records: students.map(s => ({ studentId: s.studentId, status: s.status }))
-                })
-            });
+               body: JSON.stringify({
+                   courseCategory,
+                   course,
+                   year,
+                   section,
+                   subjectId,
+                   attendanceDate,
+                   records: students.map(s => ({
+                       studentId: s.studentId,
+                       status: s.status
+                   }))
+               })
 
             const data = await res.json();
 
