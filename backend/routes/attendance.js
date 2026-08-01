@@ -52,7 +52,7 @@ router.get('/faculty/students', protect, requireRole('faculty', 'admin'), async 
 // ─── POST /api/attendance/submit — Faculty submits class attendance ──────────
 router.post('/submit', protect, requireRole('faculty', 'admin'), async (req, res) => {
     try {
-        const { subjectId, department, semester, section, attendanceDate, records } = req.body;
+        const { subjectId, course, year, section, attendanceDate, records } = req.body;
         const facultyId = req.user.email || req.user.id || 'faculty@blockedu.com';
 
         if (!subjectId || !attendanceDate || !records || !Array.isArray(records) || records.length === 0) {
@@ -84,11 +84,14 @@ router.post('/submit', protect, requireRole('faculty', 'admin'), async (req, res
             batchId,
             subjectId,
             facultyId,
-            department: department || 'Computer Science',
-            semester: semester || 'Sem 1',
-            section: section || 'Section A',
+            course: course || '',
+            year: year || '',
+            section: section || '',
             attendanceDate,
-            records: newRecords.map(r => ({ studentId: r.studentId, status: r.status })).sort((a, b) => a.studentId.localeCompare(b.studentId))
+            records: newRecords.map(r => ({
+                studentId: r.studentId,
+                status: r.status
+            })).sort((a, b) => a.studentId.localeCompare(b.studentId))
         };
         const attendanceHash = generateAttendanceHash(payloadToHash);
 
@@ -118,8 +121,8 @@ router.post('/submit', protect, requireRole('faculty', 'admin'), async (req, res
             batchId,
             facultyId,
             subjectId,
-            department,
-            semester,
+            course,
+            year,
             section,
             date: attendanceDate,
             records: newRecords,
