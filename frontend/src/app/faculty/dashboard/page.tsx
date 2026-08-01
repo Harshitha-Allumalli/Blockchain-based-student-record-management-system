@@ -178,8 +178,10 @@ export default function FacultyDashboard() {
         try {
             const token = localStorage.getItem('token');
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/attendance/faculty/batch/${batchId}`,
-                { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }
+            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/attendance/faculty/students?course=${encodeURIComponent(course)}&year=${encodeURIComponent(year)}&section=${encodeURIComponent(section)}&subjectId=${encodeURIComponent(subjectId)}`,
+            {
+                headers: { Authorization: `Bearer ${token}` }
+            }
             );
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Delete failed');
