@@ -381,26 +381,35 @@ async deleteByStudentId(studentId) {
 }
 
 };
-async getEnrolledStudents(course, year) {
+const attendanceDb = {
 
-    let query = supabase
-        .from("records")
-        .select("*");
+    async getEnrolledStudents(course, year) {
 
-    if (course)
-        query = query.eq("course", course);
+        let query = supabase
+            .from("records")
+            .select("*");
 
-    if (year)
-        query = query.eq("year", year);
+        if (course)
+            query = query.eq("course", course);
 
-    const { data, error } = await query;
+        if (year)
+            query = query.eq("year", year);
 
-    if (error) throw error;
+        const { data, error } = await query;
 
-    return data || [];
-},
+        if (error) throw error;
 
-  async checkDuplicate(studentId, subjectId, attendanceDate) {
+        return data || [];
+    },
+
+    async checkDuplicate(studentId, subjectId, attendanceDate) {
+
+        // keep your existing code here
+
+    },
+
+    // keep the remaining attendanceDb functions...
+};
 
     const { data, error } = await supabase
       .from("attendance")
