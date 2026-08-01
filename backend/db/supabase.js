@@ -454,29 +454,101 @@ async getEnrolledStudents(course, year) {
 
     return rows;
   },
-  async getFacultyStudentAttendance(facultyId) {
+  async getFacultyStudentAttendance(facultyId){
 
-    const { data, error } = await supabase
+      const {data,error}=await supabase
       .from("attendance")
-      .select(`
-        attendanceId,
-        attendanceDate,
-        attendanceStatus,
-        subjectId,
-        studentId,
-        records (
-          name,
-          course,
-          year,
-          section
-        )
-      `)
-      .eq("facultyId", facultyId)
-      .order("attendanceDate", { ascending: false });
+      .select("*")
+      .eq("facultyId",facultyId);
 
-    if (error) throw error;
+      if(error) throw error;
 
-    return data || [];
+      const grouped={};
+
+      for(const row of data){
+
+          const key=`${row.department}|${row.semester}|${row.subjectId}`;
+
+          if(!grouped[key]){
+
+              grouped[key]={
+
+                  course:row.department,
+
+                  year:row.semester,
+
+                  subject:row.subjectId,
+
+                  dates:[],
+
+                  students:[]
+              };
+
+          }
+
+          if(!grouped[key].dates.includes(row.attendanceDate))
+              grouped[key].dates.push(row.attendanceDate);
+
+          let student=grouped[key].students.find(
+              s=>s.studentId==row.studentId
+          );
+
+          if(!student){
+
+              const {data:user}=await supabase
+              .from("records")
+              .select("name")
+              .eq("studentId",row.studentId)
+              .single();
+
+              student={
+
+                  studentId:row.studentId,
+
+                  name:user?.name || "",
+
+                  total:0,
+
+                  present:0,
+
+                  absent:0,
+
+                  late:0,
+
+                  percentage:0,
+
+                  records:[]
+              };
+
+              grouped[key].students.push(student);
+          }
+
+          student.total++;
+
+          if(row.attendanceStatus=="Present")
+              student.present++;
+
+          if(row.attendanceStatus=="Absent")
+              student.absent++;
+
+          if(row.attendanceStatus=="Late")
+              student.late++;
+
+          student.records.push({
+
+              date:row.attendanceDate,
+
+              status:row.attendanceStatus
+
+          });
+
+          student.percentage=Math.round(
+              (student.present+student.late*0.5)*100/student.total
+          );
+      }
+
+      return Object.values(grouped);
+
   }
 async getFacultyHistory(facultyId, filterDate = null) {
 
