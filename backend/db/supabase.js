@@ -431,9 +431,9 @@ async getEnrolledStudents(course, year) {
       section: batch.section,
       attendanceDate: batch.date,
       attendanceStatus: r.status,
-      transaction_hash: batch.txHash,
-      attendance_hash: batch.dataHash,
-      created_at: new Date().toISOString()
+      transactionHash: batch.txHash,
+      attendanceHash: batch.dataHash,
+      createdAt: new Date().toISOString()
     }));
 
     const { error } = await supabase
@@ -523,7 +523,7 @@ async createCorrectionRequest(request) {
     id: Date.now().toString(),
     ...request,
     status: "pending",
-    created_at: new Date().toISOString()
+    createdAt: new Date().toISOString()
   };
 
   const { data, error } = await supabase
@@ -562,9 +562,9 @@ async getOverallStats() {
 
   const totals = {
     total_records: records.length,
-    present_count: records.filter(r => r.attendance_status === "Present").length,
-    absent_count: records.filter(r => r.attendance_status === "Absent").length,
-    late_count: records.filter(r => r.attendance_status === "Late").length
+    present_count: records.filter(r => r.attendanceStatus === "Present").length,
+    absent_count: records.filter(r => r.attendanceStatus === "Absent").length,
+    late_count: records.filter(r => r.attendanceStatus === "Late").length
   };
 
   return {
@@ -578,8 +578,8 @@ async getBlockchainLogs(limit = 50) {
   const { data, error } = await supabase
     .from("attendance")
     .select("*")
-    .not("transaction_hash", "is", null)
-    .order("created_at", { ascending: false })
+    .not("transactionHash", "is", null)
+    .order("createdAt", { ascending: false })
     .limit(limit);
 
   if (error) throw error;
