@@ -421,24 +421,34 @@ async getEnrolledStudents(course, year) {
   async saveBatchAttendance(batch) {
 
     const rows = batch.records.map(r => ({
-      attendanceId: Date.now().toString() + Math.random(),
-      batchId: batch.batchId,
-      facultyId: batch.facultyId,
-      studentId: r.studentId,
-      subjectId: batch.subjectId,
-      department: batch.department,
-      semester: batch.semester,
-      section: batch.section,
-      attendanceDate: batch.date,
-      attendanceStatus: r.status,
-      transactionHash: batch.txHash,
-      attendanceHash: batch.dataHash,
-      createdAt: new Date().toISOString()
-    }));
+    attendanceId: Date.now().toString() + Math.random(),
+    batchId: batch.batchId,
+    facultyId: batch.facultyId,
+    studentId: r.studentId,
+    subjectId: batch.subjectId,
+    department: batch.department,
+    section: batch.section,
+    attendanceDate: batch.date,
+    attendanceStatus: r.status,
+    isFinalized: true,
+    createdAt: new Date().toISOString()
+}));
 
     const { error } = await supabase
       .from("attendance")
       .insert(rows);
+    await supabase.from("attendance_blockchain").insert(
+        rows.map(r => ({
+            blockchainId: crypto.randomUUID(),
+            attendanceId: r.attendanceId,
+            transactionHash: batch.txHash,
+            attendanceHash: batch.dataHash,
+            timestamp: new Date().toISOString(),
+            subjectId: batch.subjectId,
+            facultyId: batch.facultyId,
+            attendanceDate: batch.date
+       }))
+    );
 
     if (error) throw error;
 
