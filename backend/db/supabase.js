@@ -407,7 +407,7 @@ async getEnrolledStudents(course, year) {
 
     const { data, error } = await supabase
       .from("attendance")
-      .select("id")
+      .select("attendanceId")
       .eq("student_id", studentId)
       .eq("subject_id", subjectId)
       .eq("attendance_date", attendanceDate)
@@ -421,7 +421,7 @@ async getEnrolledStudents(course, year) {
   async saveBatchAttendance(batch) {
 
     const rows = batch.records.map(r => ({
-      id: Date.now().toString() + Math.random(),
+      attendanceId: Date.now().toString() + Math.random(),
       batch_id: batch.batchId,
       faculty_id: batch.facultyId,
       student_id: r.studentId,
@@ -542,7 +542,7 @@ async getAttendanceById(id) {
   const { data, error } = await supabase
     .from("attendance")
     .select("*")
-    .eq("id", id)
+    .eq("attendanceId", id)
     .single();
 
   if (error || !data) return null;
