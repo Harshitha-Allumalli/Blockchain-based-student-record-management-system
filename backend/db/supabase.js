@@ -456,35 +456,54 @@ async getEnrolledStudents(course, year) {
   },
   async getFacultyStudentAttendance(facultyId) {
 
-  const { data, error } = await supabase
-    .from("attendance")
-    .select("*")
-    .eq("facultyId", facultyId)
-    .order("attendanceDate", { ascending: false });
+    const { data, error } = await supabase
+      .from("attendance")
+      .select(`
+        attendanceId,
+        attendanceDate,
+        attendanceStatus,
+        subjectId,
+        studentId,
+        records (
+          name,
+          course,
+          year,
+          section
+        )
+      `)
+      .eq("facultyId", facultyId)
+      .order("attendanceDate", { ascending: false });
 
-  if (error) throw error;
+    if (error) throw error;
 
-  return data || [];
-},
-
+    return data || [];
+  }
 async getFacultyHistory(facultyId, filterDate = null) {
 
-  let query = supabase
-    .from("attendance")
-    .select("*")
-    .eq("facultyId", facultyId)
-    .order("attendanceDate", { ascending: false });
+    let query = supabase
+        .from("attendance")
+        .select(`
+            *,
+            attendance_blockchain (
+                transactionHash,
+                attendanceHash,
+                blockNumber,
+                timestamp
+            )
+        `)
+        .eq("facultyId", facultyId)
+        .order("attendanceDate", { ascending: false });
 
-  if (filterDate) {
-    query = query.eq("attendanceDate", filterDate);
-  }
+    if (filterDate) {
+        query = query.eq("attendanceDate", filterDate);
+    }
 
-  const { data, error } = await query;
+    const { data, error } = await query;
 
-  if (error) throw error;
+    if (error) throw error;
 
-  return data || [];
-},
+    return data || [];
+}
 
 async deleteBatch(batchId, facultyId) {
 
@@ -586,7 +605,7 @@ async getOverallStats() {
 async getBlockchainLogs(limit = 50) {
 
   const { data, error } = await supabase
-    .from("attendance")
+    .from("attendance_blockchain")
     .select("*")
     .not("transactionHash", "is", null)
     .order("createdAt", { ascending: false })
