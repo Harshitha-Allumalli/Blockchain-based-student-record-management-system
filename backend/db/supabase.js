@@ -549,7 +549,7 @@ async getEnrolledStudents(course, year) {
 
       return Object.values(grouped);
 
-  }
+  },
 async getFacultyHistory(facultyId, filterDate = null) {
 
     let query = supabase
@@ -575,7 +575,7 @@ async getFacultyHistory(facultyId, filterDate = null) {
     if (error) throw error;
 
     return data || [];
-}
+},
 
 async deleteBatch(batchId, facultyId) {
 
