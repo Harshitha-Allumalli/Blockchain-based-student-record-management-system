@@ -381,6 +381,243 @@ async deleteByStudentId(studentId) {
 }
 
 };
+
+const attendanceDb = {
+
+async getEnrolledStudents(course, year) {
+
+    let query = supabase
+        .from("records")
+        .select("*");
+
+    if (course)
+        query = query.eq("course", course);
+
+    if (year)
+        query = query.eq("year", year);
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    return data || [];
+},
+
+  async checkDuplicate(studentId, subjectId, attendanceDate) {
+
+    const { data, error } = await supabase
+      .from("attendance")
+      .select("id")
+      .eq("student_id", studentId)
+      .eq("subject_id", subjectId)
+      .eq("attendance_date", attendanceDate)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    return !!data;
+  },
+
+  async saveBatchAttendance(batch) {
+
+    const rows = batch.records.map(r => ({
+      id: Date.now().toString() + Math.random(),
+      batch_id: batch.batchId,
+      faculty_id: batch.facultyId,
+      student_id: r.studentId,
+      subject_id: batch.subjectId,
+      department: batch.department,
+      semester: batch.semester,
+      section: batch.section,
+      attendance_date: batch.date,
+      attendance_status: r.status,
+      transaction_hash: batch.txHash,
+      attendance_hash: batch.dataHash,
+      created_at: new Date().toISOString()
+    }));
+
+    const { error } = await supabase
+      .from("attendance")
+      .insert(rows);
+
+    if (error) throw error;
+
+    return rows;
+  },
+  async getFacultyStudentAttendance(facultyId) {
+
+  const { data, error } = await supabase
+    .from("attendance")
+    .select("*")
+    .eq("faculty_id", facultyId)
+    .order("attendance_date", { ascending: false });
+
+  if (error) throw error;
+
+  return data || [];
+},
+
+async getFacultyHistory(facultyId, filterDate = null) {
+
+  let query = supabase
+    .from("attendance")
+    .select("*")
+    .eq("faculty_id", facultyId)
+    .order("attendance_date", { ascending: false });
+
+  if (filterDate) {
+    query = query.eq("attendance_date", filterDate);
+  }
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+
+  return data || [];
+},
+
+async deleteBatch(batchId, facultyId) {
+
+  const { error } = await supabase
+    .from("attendance")
+    .delete()
+    .eq("batch_id", batchId)
+    .eq("faculty_id", facultyId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: true };
+},
+
+async getStudentAttendance(studentId, filters = {}) {
+
+  let query = supabase
+    .from("attendance")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("attendance_date", { ascending: false });
+
+  if (filters.subjectId) {
+    query = query.eq("subject_id", filters.subjectId);
+  }
+
+  if (filters.semester) {
+    query = query.eq("semester", filters.semester);
+  }
+
+  if (filters.month) {
+    query = query.like("attendance_date", `${filters.month}%`);
+  }
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+
+  return data || [];
+},
+async createCorrectionRequest(request) {
+
+  const row = {
+    id: Date.now().toString(),
+    ...request,
+    status: "pending",
+    created_at: new Date().toISOString()
+  };
+
+  const { data, error } = await supabase
+    .from("attendance_corrections")
+    .insert(row)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data;
+},
+
+async getAttendanceById(id) {
+
+  const { data, error } = await supabase
+    .from("attendance")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) return null;
+
+  return data;
+},
+
+async getOverallStats() {
+
+  const { data, error } = await supabase
+    .from("attendance")
+    .select("*");
+
+  if (error) throw error;
+
+  const records = data || [];
+
+  const totals = {
+    total_records: records.length,
+    present_count: records.filter(r => r.attendance_status === "Present").length,
+    absent_count: records.filter(r => r.attendance_status === "Absent").length,
+    late_count: records.filter(r => r.attendance_status === "Late").length
+  };
+
+  return {
+    totals,
+    studentSummaries: []
+  };
+},
+
+async getBlockchainLogs(limit = 50) {
+
+  const { data, error } = await supabase
+    .from("attendance")
+    .select("*")
+    .not("transaction_hash", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+
+  return data || [];
+},
+
+async getCorrections(status = "pending") {
+
+  const { data, error } = await supabase
+    .from("attendance_corrections")
+    .select("*")
+    .eq("status", status);
+
+  if (error) throw error;
+
+  return data || [];
+},
+
+async approveCorrection(correctionId, approvedBy, decision) {
+
+  const { data, error } = await supabase
+    .from("attendance_corrections")
+    .update({
+      status: decision,
+      approved_by: approvedBy,
+      approved_at: new Date().toISOString()
+    })
+    .eq("id", correctionId)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data;
+}
+
+};
 module.exports = {
   usersDb,
   otpsDb,
