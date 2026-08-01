@@ -408,9 +408,9 @@ async getEnrolledStudents(course, year) {
     const { data, error } = await supabase
       .from("attendance")
       .select("attendanceId")
-      .eq("student_id", studentId)
-      .eq("subject_id", subjectId)
-      .eq("attendance_date", attendanceDate)
+      .eq("studentId", studentId)
+      .eq("subjectId", subjectId)
+      .eq("attendanceDate", attendanceDate)
       .maybeSingle();
 
     if (error) throw error;
@@ -422,15 +422,15 @@ async getEnrolledStudents(course, year) {
 
     const rows = batch.records.map(r => ({
       attendanceId: Date.now().toString() + Math.random(),
-      batch_id: batch.batchId,
-      faculty_id: batch.facultyId,
-      student_id: r.studentId,
-      subject_id: batch.subjectId,
+      batchId: batch.batchId,
+      facultyId: batch.facultyId,
+      studentId: r.studentId,
+      subjectId: batch.subjectId,
       department: batch.department,
       semester: batch.semester,
       section: batch.section,
-      attendance_date: batch.date,
-      attendance_status: r.status,
+      attendanceDate: batch.date,
+      attendanceStatus: r.status,
       transaction_hash: batch.txHash,
       attendance_hash: batch.dataHash,
       created_at: new Date().toISOString()
@@ -449,8 +449,8 @@ async getEnrolledStudents(course, year) {
   const { data, error } = await supabase
     .from("attendance")
     .select("*")
-    .eq("faculty_id", facultyId)
-    .order("attendance_date", { ascending: false });
+    .eq("facultyId", facultyId)
+    .order("attendanceDate", { ascending: false });
 
   if (error) throw error;
 
@@ -462,11 +462,11 @@ async getFacultyHistory(facultyId, filterDate = null) {
   let query = supabase
     .from("attendance")
     .select("*")
-    .eq("faculty_id", facultyId)
-    .order("attendance_date", { ascending: false });
+    .eq("facultyId", facultyId)
+    .order("attendanceDate", { ascending: false });
 
   if (filterDate) {
-    query = query.eq("attendance_date", filterDate);
+    query = query.eq("attendanceDate", filterDate);
   }
 
   const { data, error } = await query;
@@ -481,8 +481,8 @@ async deleteBatch(batchId, facultyId) {
   const { error } = await supabase
     .from("attendance")
     .delete()
-    .eq("batch_id", batchId)
-    .eq("faculty_id", facultyId);
+    .eq("batchId", batchId)
+    .eq("facultyId", facultyId);
 
   if (error) {
     return { error: error.message };
@@ -496,11 +496,11 @@ async getStudentAttendance(studentId, filters = {}) {
   let query = supabase
     .from("attendance")
     .select("*")
-    .eq("student_id", studentId)
-    .order("attendance_date", { ascending: false });
+    .eq("studentId", studentId)
+    .order("attendanceDate", { ascending: false });
 
   if (filters.subjectId) {
-    query = query.eq("subject_id", filters.subjectId);
+    query = query.eq("subjectId", filters.subjectId);
   }
 
   if (filters.semester) {
@@ -508,7 +508,7 @@ async getStudentAttendance(studentId, filters = {}) {
   }
 
   if (filters.month) {
-    query = query.like("attendance_date", `${filters.month}%`);
+    query = query.like("attendanceDate", `${filters.month}%`);
   }
 
   const { data, error } = await query;
