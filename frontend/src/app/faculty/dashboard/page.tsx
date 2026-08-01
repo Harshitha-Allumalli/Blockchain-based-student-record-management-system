@@ -218,46 +218,61 @@ export default function FacultyDashboard() {
     };
 
     const handleSubmitAttendance = async () => {
-        if (students.length === 0) return;
-        setSubmitting(true);
-        setLastTxResult(null);
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/attendance/submit`, {
-                method: 'POST',
+    if (students.length === 0) return;
+
+    setSubmitting(true);
+    setLastTxResult(null);
+
+    try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/attendance/submit`,
+            {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
                 },
-               body: JSON.stringify({
-                   courseCategory,
-                   course,
-                   year,
-                   section,
-                   subjectId,
-                   attendanceDate,
-                   records: students.map(s => ({
-                       studentId: s.studentId,
-                       status: s.status
-                   }))
-               })
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.error || 'Attendance submission failed.');
+                body: JSON.stringify({
+                    courseCategory,
+                    course,
+                    year,
+                    section,
+                    subjectId,
+                    attendanceDate,
+                    records: students.map((s) => ({
+                        studentId: s.studentId,
+                        status: s.status,
+                    })),
+                }),
             }
+        );
 
-            setLastTxResult(data);
-            setToast({ message: 'Attendance recorded on blockchain successfully!', type: 'success' });
-            fetchHistory();
-            fetchStudentAttendance();
-        } catch (err: any) {
-            setToast({ message: err.message || 'Error submitting attendance', type: 'error' });
-        } finally {
-            setSubmitting(false);
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.error || "Attendance submission failed.");
         }
-    };
+
+        setLastTxResult(data);
+
+        setToast({
+            message: "Attendance recorded on blockchain successfully!",
+            type: "success",
+        });
+
+        fetchHistory();
+        fetchStudentAttendance();
+    } catch (err: any) {
+        setToast({
+            message: err.message || "Error submitting attendance",
+            type: "error",
+        });
+    } finally {
+        setSubmitting(false);
+    }
+};
 
     // Clear only subject + students so faculty can mark another subject for same day/course/year
     const handleAddAnotherSubject = () => {
