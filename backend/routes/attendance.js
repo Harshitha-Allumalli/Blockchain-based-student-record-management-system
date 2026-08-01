@@ -40,8 +40,9 @@ function generateAttendanceHash(data) {
 // Returns list of students for class marking
 router.get('/faculty/students', protect, requireRole('faculty', 'admin'), async (req, res) => {
     try {
-        const { department, semester, section, subjectId } = req.query;
-        const students = await attendanceDb.getEnrolledStudents(department, semester, section, subjectId);
+       const { course, year, section, subjectId } = req.query;
+
+        const students = await attendanceDb.getEnrolledStudents(course,year,section,subjectId);
         res.json({ success: true, count: students.length, students });
     } catch (err) {
         res.status(500).json({ error: err.message });
