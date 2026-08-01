@@ -141,7 +141,7 @@ export default function FacultyDashboard() {
             const token = localStorage.getItem('token');
             if (!token) { router.push('/faculty/login'); return; }
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/attendance/faculty/students?course=${encodeURIComponent(course)}&year=${encodeURIComponent(year)}&section=${encodeURIComponent(section)}&subjectId=${encodeURIComponent(subjectId)}`
+                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/attendance/faculty/students?course=${encodeURIComponent(course)}&year=${encodeURIComponent(year)}&section=${encodeURIComponent(section)}&subjectId=${encodeURIComponent(subjectId)}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             const data = await res.json();
