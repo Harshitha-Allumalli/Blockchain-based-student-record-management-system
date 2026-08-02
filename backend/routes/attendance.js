@@ -38,23 +38,13 @@ function generateAttendanceHash(data) {
 
 // ─── GET /api/attendance/faculty/students ───────────────────────────────────
 // Returns list of students for class marking
-router.get('/faculty/history', protect, requireRole('faculty', 'admin'), async (req, res) => {
+router.get('/faculty/students', protect, requireRole('faculty', 'admin'), async (req, res) => {
     try {
-        const facultyId = req.user.email || req.user.id;
+       const { course, year, section, subjectId } = req.query;
 
-        console.log("Logged Faculty:", facultyId);
-
-        const history = await attendanceDb.getFacultyHistory(facultyId);
-
-        console.log("History Returned:", history);
-
-        res.json({
-            success: true,
-            history
-        });
-
+        const students = await attendanceDb.getEnrolledStudents(course,year,section,subjectId);
+        res.json({ success: true, count: students.length, students });
     } catch (err) {
-        console.log(err);
         res.status(500).json({ error: err.message });
     }
 });
